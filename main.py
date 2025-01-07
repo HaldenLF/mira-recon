@@ -8,19 +8,20 @@ ip_address = 0
 
 def intro_ascii():
         print("""/////////////////////////////////////////////////////////////////////////////////////////
-//             .         .                                                             //
-//            ,8.       ,8.           8 8888   8 888888888o.            .8.            //
-//           ,888.     ,888.          8 8888   8 8888    `88.          .888.           //
-//          .`8888.   .`8888.         8 8888   8 8888     `88         :88888.          //
-//         ,8.`8888. ,8.`8888.        8 8888   8 8888     ,88        . `88888.         //
-//        ,8'8.`8888,8^8.`8888.       8 8888   8 8888.   ,88'       .8. `88888.        //
-//       ,8' `8.`8888' `8.`8888.      8 8888   8 888888888P'       .8`8. `88888.       //
-//      ,8'   `8.`88'   `8.`8888.     8 8888   8 8888`8b          .8' `8. `88888.      //
-//     ,8'     `8.`'     `8.`8888.    8 8888   8 8888 `8b.       .8'   `8. `88888.     //
-//    ,8'       `8        `8.`8888.   8 8888   8 8888   `8b.    .888888888. `88888.    //
-//   ,8'         `         `8.`8888.  8 8888   8 8888     `88. .8'       `8. `88888.   //
-//                                                                                     //
-/////////////////////////////////////////////////////////////////////////////////////////\n///\n///\n///\n///""")
+                //             .         .                                                             //
+                //            ,8.       ,8.           8 8888   8 888888888o.            .8.            //
+                //           ,888.     ,888.          8 8888   8 8888    `88.          .888.           //
+                //          .`8888.   .`8888.         8 8888   8 8888     `88         :88888.          //
+                //         ,8.`8888. ,8.`8888.        8 8888   8 8888     ,88        . `88888.         //
+                //        ,8'8.`8888,8^8.`8888.       8 8888   8 8888.   ,88'       .8. `88888.        //
+                //       ,8' `8.`8888' `8.`8888.      8 8888   8 888888888P'       .8`8. `88888.       //
+                //      ,8'   `8.`88'   `8.`8888.     8 8888   8 8888`8b          .8' `8. `88888.      //
+                //     ,8'     `8.`'     `8.`8888.    8 8888   8 8888 `8b.       .8'   `8. `88888.     //
+                //    ,8'       `8        `8.`8888.   8 8888   8 8888   `8b.    .888888888. `88888.    //
+                //   ,8'         `         `8.`8888.  8 8888   8 8888     `88. .8'       `8. `88888.   //
+                //                                                                                     //
+                /////////////////////////////////////////////////////////////////////////////////////////
+                \n///\n///\n///\n///""")
 
 class PDFReport(FPDF):
     
@@ -52,7 +53,7 @@ class DomainInfo:
         self.domain = domain
 
     def get_whois_info(self):
-        """Retrieve WHOIS information for the domain."""
+        # Retrieve WHOIS information
         try:
             w = whois.whois(self.domain)
             site_name = w.name if w.name else "N/A"
@@ -63,7 +64,7 @@ class DomainInfo:
             return "N/A", self.domain
 
     def get_ip_address(self):
-        """Retrieve the IP address of the domain."""
+        # Retrieve the IP address
         try:
             return socket.gethostbyname(self.domain)
         except Exception as e:
@@ -119,14 +120,15 @@ class PortScanner:
 
 
 def main():
-    print("What type of information would you like to gather?\n"
+    print("----------------------------------------------------------------------------------\n"
+          "What type of information would you like to gather?\n"
           "1. Full Scan and Report of target site\n"
           "2. Basic Target Information\n"
           "3. Port Scan\n"
           "4. Directory & Subdomain Scan\n"
           "5. Technology Scan\n")
 
-    userChoice = input(">>> \n")
+    userChoice = input(">>> ")
     
     if userChoice == '1':
         "Full scan implementation"
@@ -141,22 +143,22 @@ def main():
     if userChoice == '3':
         while True:
             print("\nChoose a scan option:")
-            print("1. Open Port Scan")
+            print("1. Basic Port Scan")
             print("2. Advanced Scan")
             print("3. Exit")
 
-            port_scan_choice = input("Enter your choice (1/2/3): ")
+            port_scan_choice = input(">>> ")
 
             if port_scan_choice == '1':
                 ports = input("Enter the ports to scan (e.g., 1-1024 or 22,80,443): ")
                 scan = PortScanner(target, ports)
-                basic_result = scan.basic_scan(target, ports)
+                basic_result = scan.basic_scan()
                 for result in basic_result:
                     print(result)
             elif port_scan_choice == '2':
                 ports = input("Enter the ports to scan (e.g., 1-1024 or 22,80,443): ")
                 scan = PortScanner(target, ports)
-                advanced_result = scan.advanced_scan(target, ports)
+                advanced_result = scan.advanced_scan()
                 for result in advanced_result:
                     print(result)
             elif port_scan_choice == '3':
@@ -171,5 +173,5 @@ if __name__ == "__main__":
     print("Welcome to Mira! An tool for speeding up the intial information gathering process!\n"
           "----------------------------------------------------------------------------------\n")
     target = userTarget = input("What is your target site?\n"
-                                ">>> \n")
+                                ">>> ")
     main()
