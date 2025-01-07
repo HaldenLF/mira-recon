@@ -19,7 +19,7 @@ def DNS_Scan(target, record_types):
     return results
                
 # Set the target domain and record type
-target = "google.com"
+target = "example.com"
 record_types = ["A", "AAAA", "CNAME", "MX", "NS", "SOA", "TXT"]
 
 # Print the results

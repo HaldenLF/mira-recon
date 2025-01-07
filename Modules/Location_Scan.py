@@ -1,4 +1,4 @@
-from ping3 import ping3
+import ping3
 import requests
 import logging
 
