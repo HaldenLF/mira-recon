@@ -1,27 +1,27 @@
+#!/usr/bin/env python3
+
 import socket
 import whois
 import nmap
+import requests
 from fpdf import FPDF 
-
-target = ''
-ip_address = 0
 
 def intro_ascii():
         print("""/////////////////////////////////////////////////////////////////////////////////////////
-                //             .         .                                                             //
-                //            ,8.       ,8.           8 8888   8 888888888o.            .8.            //
-                //           ,888.     ,888.          8 8888   8 8888    `88.          .888.           //
-                //          .`8888.   .`8888.         8 8888   8 8888     `88         :88888.          //
-                //         ,8.`8888. ,8.`8888.        8 8888   8 8888     ,88        . `88888.         //
-                //        ,8'8.`8888,8^8.`8888.       8 8888   8 8888.   ,88'       .8. `88888.        //
-                //       ,8' `8.`8888' `8.`8888.      8 8888   8 888888888P'       .8`8. `88888.       //
-                //      ,8'   `8.`88'   `8.`8888.     8 8888   8 8888`8b          .8' `8. `88888.      //
-                //     ,8'     `8.`'     `8.`8888.    8 8888   8 8888 `8b.       .8'   `8. `88888.     //
-                //    ,8'       `8        `8.`8888.   8 8888   8 8888   `8b.    .888888888. `88888.    //
-                //   ,8'         `         `8.`8888.  8 8888   8 8888     `88. .8'       `8. `88888.   //
-                //                                                                                     //
-                /////////////////////////////////////////////////////////////////////////////////////////
-                \n///\n///\n///\n///""")
+//             .         .                                                             //
+//            ,8.       ,8.           8 8888   8 888888888o.            .8.            //
+//           ,888.     ,888.          8 8888   8 8888    `88.          .888.           //
+//          .`8888.   .`8888.         8 8888   8 8888     `88         :88888.          //
+//         ,8.`8888. ,8.`8888.        8 8888   8 8888     ,88        . `88888.         //
+//        ,8'8.`8888,8^8.`8888.       8 8888   8 8888.   ,88'       .8. `88888.        //
+//       ,8' `8.`8888' `8.`8888.      8 8888   8 888888888P'       .8`8. `88888.       //
+//      ,8'   `8.`88'   `8.`8888.     8 8888   8 8888`8b          .8' `8. `88888.      //
+//     ,8'     `8.`'     `8.`8888.    8 8888   8 8888 `8b.       .8'   `8. `88888.     //
+//    ,8'       `8        `8.`8888.   8 8888   8 8888   `8b.    .888888888. `88888.    //
+//   ,8'         `         `8.`8888.  8 8888   8 8888     `88. .8'       `8. `88888.   //
+//                                                                                     //
+/////////////////////////////////////////////////////////////////////////////////////////
+///\n///\n///\n///""")
 
 class PDFReport(FPDF):
     
@@ -117,12 +117,55 @@ class PortScanner:
                 for port in nm[host][proto].keys():
                     self.result.append(f'Port: {port}, State: {nm[host][proto][port]["state"]}')
 
+''' Not working as expected
+    Error when either scan function is called.
+    
+    
+class WebScanner:
+    def __init__(self, target, wordlist):
+        self.target = target
+        self.wordlist = wordlist
+        self.results = []
 
+    def scan_directories(self):
+        # Scan for directories
+        print(f"Performing directory scan on {self.target}...")
+        with open(self.wordlist, 'r') as f:
+            for line in f:
+                directory = line.strip()
+                url = f"{self.target}/{directory}"
+                try:
+                    response = requests.get(url)
+                    if response.status_code == 200:
+                        self.results.append(url)
+                        print(f"[+] Found: {url}")
+                except Exception as e:
+                    # pass 
+                    # print(f"[+] error: {url}")
+
+        return self.results
+
+    def scan_subdomains(self):
+        # Scan for subdomains
+        print(f"Performing subdomain scan on {self.target}...")
+        with open(self.wordlist, 'r') as f:
+            for line in f:
+                subdomain = line.strip()
+                url = f"http://{subdomain}.{self.target}"
+                try:
+                    response = requests.get(url)
+                    if response.status_code == 200:
+                        self.results.append(url)
+                        print(f"[+] Found: {url}")
+                except Exception as e:
+                    # pass
+                    # print(f"[+] error: {url}")
+
+        return self.results
+'''
 
 def main():
-    print("----------------------------------------------------------------------------------\n"
-          "What type of information would you like to gather?\n"
-          "1. Full Scan and Report of target site\n"
+    print("1. Full Scan and Report of target site\n"
           "2. Basic Target Information\n"
           "3. Port Scan\n"
           "4. Directory & Subdomain Scan\n"
@@ -139,13 +182,14 @@ def main():
         
         for key, value in info.items():
             print(f"{key}: {value}")
+        main()
             
     if userChoice == '3':
         while True:
-            print("\nChoose a scan option:")
-            print("1. Basic Port Scan")
-            print("2. Advanced Scan")
-            print("3. Exit")
+            print("\nChoose a scan option:\n"
+                  "1. Basic Port Scan\n"
+                  "2. Advanced Scan\n"
+                  "3. Exit\n")
 
             port_scan_choice = input(">>> ")
 
@@ -166,12 +210,47 @@ def main():
                 main()
             else:
                 print("Invalid choice. Please try again.")
-    
+                
+    if userChoice == "4":
+        wordlist = "commonDir&SD.txt"
+        scanner = WebScanner(target, wordlist)
+        
+        print("----------------------------------------------------------------------------------\n"
+              "1. Directory Scan\n"
+              "2. Subdomain Scan\n"
+              "3. Exit\n")
+        
+        scan_choice = input(">>> ")
+        
+        if scan_choice == '1':
+            results = scanner.scan_directories()
+        elif scan_choice == '2':
+            results = scanner.scan_subdomains()
+        elif scan_choice == '3':
+            print("Back to main")
+            main()
+        else:
+            print("Invalid choice. Please try again.")
+            return
+        
     
 if __name__ == "__main__":
     intro_ascii()
     print("Welcome to Mira! An tool for speeding up the intial information gathering process!\n"
           "----------------------------------------------------------------------------------\n")
-    target = userTarget = input("What is your target site?\n"
+    userTarget = input("What is your target site?\n"
                                 ">>> ")
+    # Retrieve and store target and ip_address 
+    # without having to go through option 2 on menu
+    analyse = DomainInfo(userTarget)
+    info = analyse.get_domain_info()
+    
+    global target
+    global ip_address
+    
+    target = userTarget
+    ip_address = info['IP Address']
+    
+    print("----------------------------------------------------------------------------------\n"
+          "What type of information would you like to gather?\n")
     main()
