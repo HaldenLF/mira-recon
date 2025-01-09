@@ -5,6 +5,11 @@ import whois
 import nmap
 import requests
 from fpdf import FPDF 
+from queue import Queue
+from bs4 import BeautifulSoup
+from threading import Thread, Lock
+from urllib.parse import urljoin, urlparse
+
 
 def intro_ascii():
         print("""/////////////////////////////////////////////////////////////////////////////////////////
@@ -117,54 +122,63 @@ class PortScanner:
                 for port in nm[host][proto].keys():
                     self.result.append(f'Port: {port}, State: {nm[host][proto][port]["state"]}')
 
-''' Not working as expected
-    Error when either scan function is called.
-    
-    
 class WebScanner:
     def __init__(self, target, wordlist):
         self.target = target
         self.wordlist = wordlist
+        self.q = Queue()
+        self.list_lock = Lock()
         self.results = []
 
-    def scan_directories(self):
-        # Scan for directories
+    def scan_directories(self):# Scan for directories  
         print(f"Performing directory scan on {self.target}...")
-        with open(self.wordlist, 'r') as f:
-            for line in f:
-                directory = line.strip()
-                url = f"{self.target}/{directory}"
-                try:
-                    response = requests.get(url)
-                    if response.status_code == 200:
-                        self.results.append(url)
-                        print(f"[+] Found: {url}")
-                except Exception as e:
-                    # pass 
-                    # print(f"[+] error: {url}")
+
+        try:
+            response = requests.get(self.target, timeout=5)
+            response.raise_for_status()  
+        except requests.exceptions.RequestException as e:
+            print(f"[!] Error accessing {self.target}: {e}")
+            return self.results
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        directories = set()
+
+        for link in soup.find_all('a'):
+            url = link.get('href')
+            if url:
+                full_url = urljoin(self.target, url)
+                parsed_url = urlparse(full_url)
+
+                if parsed_url.path.endswith('/'):
+                    directories.add(full_url)
+
+        # Print and store the found directories
+        for dir in directories:
+            print(f"[+] Found directory: {dir}")
+            self.results.append(dir)
 
         return self.results
 
     def scan_subdomains(self):
-        # Scan for subdomains
         print(f"Performing subdomain scan on {self.target}...")
+        
         with open(self.wordlist, 'r') as f:
             for line in f:
                 subdomain = line.strip()
                 url = f"http://{subdomain}.{self.target}"
+                
                 try:
-                    response = requests.get(url)
-                    if response.status_code == 200:
-                        self.results.append(url)
-                        print(f"[+] Found: {url}")
-                except Exception as e:
-                    # pass
-                    # print(f"[+] error: {url}")
-
+                    response = requests.get(url, timeout=5)
+                    response.raise_for_status()  
+                    print(f"[+] Found subdomain: {url}")
+                    self.results.append(url)
+                except requests.exceptions.RequestException as e:
+                    print(f"[!] Error accessing {url}: {e}")
+        
         return self.results
-'''
 
-def main():
+
+def menu():
     print("1. Full Scan and Report of target site\n"
           "2. Basic Target Information\n"
           "3. Port Scan\n"
@@ -182,7 +196,7 @@ def main():
         
         for key, value in info.items():
             print(f"{key}: {value}")
-        main()
+        menu()
             
     if userChoice == '3':
         while True:
@@ -207,12 +221,12 @@ def main():
                     print(result)
             elif port_scan_choice == '3':
                 print("Back to main")
-                main()
+                menu()
             else:
                 print("Invalid choice. Please try again.")
                 
     if userChoice == "4":
-        wordlist = "commonDir&SD.txt"
+        wordlist = "common.txt"
         scanner = WebScanner(target, wordlist)
         
         print("----------------------------------------------------------------------------------\n"
@@ -228,7 +242,7 @@ def main():
             results = scanner.scan_subdomains()
         elif scan_choice == '3':
             print("Back to main")
-            main()
+            menu()
         else:
             print("Invalid choice. Please try again.")
             return
@@ -253,4 +267,4 @@ if __name__ == "__main__":
     
     print("----------------------------------------------------------------------------------\n"
           "What type of information would you like to gather?\n")
-    main()
+    menu()
