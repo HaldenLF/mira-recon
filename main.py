@@ -131,6 +131,7 @@ class WebScanner:
         self.results = []
 
     def scan_directories(self):# Scan for directories  
+        self.results.clear()
         print(f"Performing directory scan on {self.target}...")
 
         try:
@@ -160,22 +161,42 @@ class WebScanner:
         return self.results
 
     def scan_subdomains(self):
+        self.results.clear()
         print(f"Performing subdomain scan on {self.target}...")
         
+        q = Queue()
+        self.results = []
+        list_lock = Lock()
+        
         with open(self.wordlist, 'r') as f:
-            for line in f:
-                subdomain = line.strip()
+            for subdomain in f:
+                q.put(subdomain.strip())
+        
+        def scan():
+            while True:
+                subdomain = q.get()
                 url = f"http://{subdomain}.{self.target}"
                 
                 try:
-                    response = requests.get(url, timeout=5)
-                    response.raise_for_status()  
-                    print(f"[+] Found subdomain: {url}")
-                    self.results.append(url)
-                except requests.exceptions.RequestException as e:
-                    print(f"[!] Error accessing {url}: {e}")
+                    requests.get(url)
+                except requests.ConnectionError:
+                    pass
+                else:
+                    with list_lock:
+                        self.results.append(url)
+                        print(f"[+] Discovered subdomain: {url}")
+                
+                q.task_done()
+        
+        for t in range(10):
+            worker = Thread(target=scan)
+            worker.daemon = True
+            worker.start()
+
+        q.join()
         
         return self.results
+            
 
 
 def menu():
