@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
+import re
 import socket
 import whois
 import nmap
 import requests
+import subprocess
+import builtwith
 from fpdf import FPDF 
 from queue import Queue
 from bs4 import BeautifulSoup
@@ -197,77 +200,128 @@ class WebScanner:
         
         return self.results
             
+class WebsiteAnalyzer:
+    def __init__(self, url):
+        self.url = url
 
+    def get_builtwith_technologies(self):
+        website = builtwith.parse(self.url)
+        for key, value in website.items():
+            print(key + ":", ", ".join(value))
+
+    def get_whatweb_technologies(self):
+        try:
+            result = subprocess.run(['whatweb', self.url], capture_output=True, text=True, check=True)
+            if result.returncode == 0:
+                return result.stdout
+            else:
+                print(f"Error: {result.stderr}")
+                return None
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return None
+
+    @staticmethod
+    def format_output(output):
+        pattern = r",(?![^\[\]]*\))"
+        items = re.split(pattern, output)
+        items = [item.strip() for item in items]
+        formatted_output = "\n".join(items)
+        return formatted_output
+
+
+    def analyze(self):
+        # Analyze website and print detected technologies
+        print("\nDetected Technologies (BuiltWith):")
+        print("=================================")
+        self.get_builtwith_technologies()
+
+        print("\nDetected Technologies (WhatWeb):")
+        print("===============================")
+        technologies = self.get_whatweb_technologies()
+        if technologies:
+            formatted_technologies = self.format_output(technologies)
+            print(formatted_technologies)
 
 def menu():
-    print("1. Full Scan and Report of target site\n"
-          "2. Basic Target Information\n"
-          "3. Port Scan\n"
-          "4. Directory & Subdomain Scan\n"
-          "5. Technology Scan\n")
+    while True:
+        print("\n----------------------------------------------------------------------------------\n"
+              "1. Full Scan and Report of target site\n"
+              "2. Basic Target Information\n"
+              "3. Port Scan\n"
+              "4. Directory & Subdomain Scan\n"
+              "5. Technology Scan\n")
 
-    userChoice = input(">>> ")
-    
-    if userChoice == '1':
-        "Full scan implementation"
+        userChoice = input(">>> ")
         
-    if userChoice == '2':
-        analyse = DomainInfo(target)
-        info = analyse.get_domain_info()
-        
-        for key, value in info.items():
-            print(f"{key}: {value}")
-        menu()
+        if userChoice == '1':
+            "Full scan implementation"
             
-    if userChoice == '3':
-        while True:
-            print("\nChoose a scan option:\n"
-                  "1. Basic Port Scan\n"
-                  "2. Advanced Scan\n"
-                  "3. Exit\n")
+        elif userChoice == '2':
+            analyse = DomainInfo(target)
+            info = analyse.get_domain_info()
+            
+            for key, value in info.items():
+                print(f"{key}: {value}")
+                
+        elif userChoice == '3':
+            while True:
+                print("\nChoose a scan option:\n"
+                    "1. Basic Port Scan\n"
+                    "2. Advanced Scan\n"
+                    "3. Exit\n")
 
-            port_scan_choice = input(">>> ")
+                port_scan_choice = input(">>> ")
 
-            if port_scan_choice == '1':
-                ports = input("Enter the ports to scan (e.g., 1-1024 or 22,80,443): ")
-                scan = PortScanner(target, ports)
-                basic_result = scan.basic_scan()
-                for result in basic_result:
-                    print(result)
-            elif port_scan_choice == '2':
-                ports = input("Enter the ports to scan (e.g., 1-1024 or 22,80,443): ")
-                scan = PortScanner(target, ports)
-                advanced_result = scan.advanced_scan()
-                for result in advanced_result:
-                    print(result)
-            elif port_scan_choice == '3':
-                print("Back to main")
-                menu()
+                if port_scan_choice == '1':
+                    ports = input("Enter the ports to scan (e.g., 1-1024 or 22,80,443): ")
+                    scan = PortScanner(target, ports)
+                    basic_result = scan.basic_scan()
+                    for result in basic_result:
+                        print(result)
+                elif port_scan_choice == '2':
+                    ports = input("Enter the ports to scan (e.g., 1-1024 or 22,80,443): ")
+                    scan = PortScanner(target, ports)
+                    advanced_result = scan.advanced_scan()
+                    for result in advanced_result:
+                        print(result)
+                elif port_scan_choice == '3':
+                    break
+                else:
+                    print("Invalid choice. Please try again.")
+                    
+        elif userChoice == "4":
+            wordlist = "common.txt"
+            scanner = WebScanner(target, wordlist)
+            
+            print("----------------------------------------------------------------------------------\n"
+                "1. Directory Scan\n"
+                "2. Subdomain Scan\n"
+                "3. Exit\n")
+            
+            scan_choice = input(">>> ")
+            
+            if scan_choice == '1':
+                results = scanner.scan_directories()
+            elif scan_choice == '2':
+                results = scanner.scan_subdomains()
+            elif scan_choice == '3':
+                break
             else:
                 print("Invalid choice. Please try again.")
-                
-    if userChoice == "4":
-        wordlist = "common.txt"
-        scanner = WebScanner(target, wordlist)
+                return
+            
+        elif userChoice == "5":
+            print(f"Scanning {target} for used technology...")
+            analyser = WebsiteAnalyzer(target)
+            analyser.analyze()
+            
+        elif userChoice == "exit":
+            print("Goodbye!")
+            break
         
-        print("----------------------------------------------------------------------------------\n"
-              "1. Directory Scan\n"
-              "2. Subdomain Scan\n"
-              "3. Exit\n")
-        
-        scan_choice = input(">>> ")
-        
-        if scan_choice == '1':
-            results = scanner.scan_directories()
-        elif scan_choice == '2':
-            results = scanner.scan_subdomains()
-        elif scan_choice == '3':
-            print("Back to main")
-            menu()
         else:
-            print("Invalid choice. Please try again.")
-            return
-        
+            print("Invalid option.Please try again.")
     
 if __name__ == "__main__":
     intro_ascii()
@@ -275,6 +329,7 @@ if __name__ == "__main__":
           "----------------------------------------------------------------------------------\n")
     userTarget = input("What is your target site?\n"
                                 ">>> ")
+    print(f"Retriving and storing IP address for {userTarget}...")
     # Retrieve and store target and ip_address 
     # without having to go through option 2 on menu
     analyse = DomainInfo(userTarget)
