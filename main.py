@@ -202,13 +202,13 @@ class WebScanner:
             
 class WebsiteAnalyzer:
     def __init__(self, url):
-        self.url = url
-
+        self.url =url
+    
     def get_builtwith_technologies(self):
         website = builtwith.parse(self.url)
         for key, value in website.items():
             print(key + ":", ", ".join(value))
-
+    
     def get_whatweb_technologies(self):
         try:
             result = subprocess.run(['whatweb', self.url], capture_output=True, text=True, check=True)
@@ -223,7 +223,7 @@ class WebsiteAnalyzer:
 
     @staticmethod
     def format_output(output):
-        pattern = r",(?![^\[\]]*\))"
+        pattern = r",(?![^\[\]]*\])"
         items = re.split(pattern, output)
         items = [item.strip() for item in items]
         formatted_output = "\n".join(items)
@@ -325,7 +325,7 @@ def menu():
     
 if __name__ == "__main__":
     intro_ascii()
-    print("Welcome to Mira! An tool for speeding up the intial information gathering process!\n"
+    print("Welcome to Mira! A tool for speeding up the intial information gathering process!\n"
           "----------------------------------------------------------------------------------\n")
     userTarget = input("What is your target site?\n"
                                 ">>> ")
