@@ -36,7 +36,7 @@ class PDFReport(FPDF):
     # Set the header of the PDF report
     def header(self):
         self.set_font('Arial', 'B', 12) 
-        self.cell(0, 10, 'Vulnerability Scan Report', 0, 1, 'C')  
+        self.cell(0, 10, f'{target} Report', 0, 1, 'C')  
         self.ln(10) 
 
     # Add a chapter title in the PDF report
@@ -55,6 +55,46 @@ class PDFReport(FPDF):
     def add_report_section(self, title, body):
         self.chapter_title(title)
         self.chapter_body(body)
+
+# needs better formating
+def generate_report(target):
+    # Initialize PDFReport
+    pdf = PDFReport()
+    pdf.add_page()
+
+    # Add a title to the report
+    pdf.chapter_title("Full Vulnerability Scan Report")
+    pdf.chapter_body(f"Target: {target}\n\n")
+
+    # Step 1: Gather Domain Information
+    domain_info = DomainInfo(target).get_domain_info()
+    pdf.add_report_section("Domain Information", "\n".join([f"{key}: {value}" for key, value in domain_info.items()]))
+
+    # Step 2: Perform Port Scan
+    ports = "20, 21, 22, 23, 25, 53, 80, 110, 119, 123, 143, 161, 194, 443"  # Default port range for the scan
+    port_scanner = PortScanner(target, ports)
+    port_scan_results = port_scanner.basic_scan()
+    pdf.add_report_section("Port Scan Results", "\n".join(port_scan_results))
+
+    # Step 3: Perform Directory and Subdomain Scan
+    wordlist = "common.txt"  # Path to the wordlist file
+    web_scanner = WebScanner(target, wordlist)
+    directory_scan_results = web_scanner.scan_directories()
+    subdomain_scan_results = web_scanner.scan_subdomains()
+    pdf.add_report_section("Directory Scan Results", "\n".join(directory_scan_results))
+    pdf.add_report_section("Subdomain Scan Results", "\n".join(subdomain_scan_results))
+
+    # Step 4: Perform Technology Scan
+    website_analyzer = WebsiteAnalyzer(target)
+    technologies = website_analyzer.get_whatweb_technologies()
+    if technologies:
+        formatted_technologies = website_analyzer.format_output(technologies)
+        pdf.add_report_section("Technology Scan Results", formatted_technologies)
+
+    # Step 5: Save the PDF
+    report_filename = f"{target}_report.pdf"
+    pdf.output(report_filename)
+    print(f"Full report saved as {report_filename}")
 
 class DomainInfo:
     def __init__(self, domain):
@@ -255,7 +295,8 @@ def menu():
         userChoice = input(">>> ")
         
         if userChoice == '1':
-            "Full scan implementation"
+            print("Running full scan and generating report...")
+            generate_report(target)
             
         elif userChoice == '2':
             analyse = DomainInfo(target)
