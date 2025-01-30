@@ -44,14 +44,14 @@ Options:
 def main():
     parser = CustomArgumentParser()
     
-    parser.add_argument('-Si', '--site-info', action='store_true', help="Target Site Information")
+    parser.add_argument('-Di', '--domain-info', action='store_true', help="Domain Information")
     parser.add_argument('-Ps', '--port-scan', action='store_true', help="Port Scan")
     parser.add_argument('-Ds', '--dir-scan', action='store_true', help="Directory Scan")
     parser.add_argument('-Ss', '--sub-scan', action='store_true', help="Subdomain Scan")
     parser.add_argument('-Ts', '--tech-scan', action='store_true', help="Technology Scan")
     parser.add_argument('-t', '--target', type=str, help="Target URL", required=True)
-    parser.add_argument('-p', '--ports', type=str, help="Ports to scan (e.g., 1-1024 or 22,80,443)")
-    parser.add_argument('-Wl', '--wordlist', type=str, help="Path to the wordlist", default="subdomains.txt")
+    parser.add_argument('-p', '--ports', type=str, help="Ports to scan (e.g., 1-1024 or 22,80,443). Use with -Ps")
+    parser.add_argument('-Wl', '--wordlist', type=str, help="Path/to/wordlist. Use with -Ss", default="subdomains.txt")
     
     args = parser.parse_args()
 
@@ -70,7 +70,7 @@ def main():
         logging.error("Please enter a target URL.")
         return
         
-    if args.site_info:
+    if args.domain_info:
         try:
             analyse = DomainInfo.dns_look_up(target)
             if analyse:
@@ -79,14 +79,16 @@ def main():
             else:
                 logging.error("Failed to perform DNS lookup.")
         except Exception as e:      
-            logging.error(f"An error occurred during basic scan: {e}")
+            logging.error(f"An error occurred during domain info scan: {e}")
 
     elif args.port_scan:
         try:
             scan = PortScanner(target, args.ports)
-            results = scan.basic_scan()
-            for result in results:
-                logging.info(result)
+            results = scan.port_scan()
+            if results:
+                pass
+            else:
+                logging.info("No open ports found.")
         except Exception as e:
             logging.error(f"An error occurred during port scan: {e}")
 

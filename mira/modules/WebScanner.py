@@ -8,6 +8,9 @@ from urllib.parse import urljoin, urlparse
 
 from .utils import strip_protocol
 
+N_THREADS = 200
+print_lock = Lock()
+
 class WebScanner:
     def __init__(self, target, wordlist):
         self.target = target
@@ -45,37 +48,35 @@ class WebScanner:
         self.results.extend(directories)
         return self.results
     
+    def scan_subdomain(self, subdomain):
+        url = f"http://{subdomain}.{self.Target}"
+        try:
+            requests.get(url)
+        except requests.ConnectionError:
+            pass
+        else:
+            with self.list_lock:
+                self.results.append(url)
+
+    def scan_thread(self, scan_function):
+        while True:
+            item = self.q.get()
+            scan_function(item)
+            self.q.task_done()
+
     def scan_subdomains(self):
         self.results.clear()
-        logging.info(f"Performing subdomain scan on {self.Target}...")
-        
-        q = Queue()
-        self.results = []
-        list_lock = Lock()
-        
+        logging.info(f"Performing subdomain scan on {self.Target}...\n"
+                     "May take a while depending on the size of the wordlist...")
+
         with open(self.wordlist, 'r') as f:
             for subdomain in f:
-                q.put(subdomain.strip())
-        
-        def scan():
-            while True:
-                subdomain = q.get()
-                url = f"http://{subdomain}.{self.Target}"
-                try:
-                    requests.get(url)
-                except requests.ConnectionError:
-                    pass
-                else:
-                    with list_lock:
-                        self.results.append(url)
-                
-                q.task_done()
-        
-        for t in range(10):
-            worker = Thread(target=scan)
+                self.q.put(subdomain.strip())
+
+        for _ in range(N_THREADS):
+            worker = Thread(target=self.scan_thread, args=(self.scan_subdomain,))
             worker.daemon = True
             worker.start()
 
-        q.join()
-        
+        self.q.join()
         return self.results

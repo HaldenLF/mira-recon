@@ -1,31 +1,58 @@
-import nmap
+import socket
 import logging
+from threading import Thread, Lock
+from queue import Queue
 from .utils import strip_protocol
+
+N_THREADS = 200
+print_lock = Lock()
 
 class PortScanner:
     def __init__(self, target, ports):
         self.target = strip_protocol(target)
-        self.ports = ports
-        self.result = []  
+        self.ports =  self.parse_ports(ports)
+        self.results = []
+        self.q = Queue()
+        
+    def parse_ports(self, ports):
+        port_list = []
+        for part in ports.split(','):
+            if '-' in part:
+                start, end = part.split('-')
+                port_list.extend(range(int(start), int(end) + 1))
+            else:
+                port_list.append(int(part.strip()))
+        return port_list    
 
-    def basic_scan(self):
-        logging.info(f"Performing basic port scan on {self.target} for common ports...")
+    def open_port(self, port):
         try:
-            nm = nmap.PortScanner()
-            nm.scan(self.target, arguments=f'-p {self.ports}')
-            self.scan_results(nm)
-        except Exception as e:
-            logging.error(f"An error occurred: {e}")
-        return self.result
+            s = socket.socket()
+            s.settimeout(1)
+            s.connect((self.target, port))
+        except:
+            pass
+        else:
+            with print_lock:
+                logging.info(f"{self.target:15}: {port:5} is open")
+                self.results.append(port)
+        finally:
+            s.close()
 
-    def scan_results(self, nm):
-        try:
-            for host in nm.all_hosts():
-                self.result.append(f'Host: {host} ({nm[host].hostname()})')
-                self.result.append(f'State: {nm[host].state()}')
-                for proto in nm[host].all_protocols():
-                    self.result.append(f'Protocol: {proto}')
-                    for port in nm[host][proto].keys():
-                        self.result.append(f'Port: {port}, State: {nm[host][proto][port]["state"]}')
-        except Exception as e:
-            logging.error(f"An error occurred: {e}")
+    def scan_thread(self):
+        while True:
+            worker = self.q.get()
+            self.open_port(worker)
+            self.q.task_done()
+
+    def port_scan(self):
+        logging.info(f"Starting port scan on {self.target}")
+        for t in range(N_THREADS):
+            t = Thread(target=self.scan_thread)
+            t.daemon = True
+            t.start()
+        for worker in self.ports:
+            self.q.put(worker)
+        self.q.join()
+        logging.info("Port scan completed.\n"
+                     f"Closed or filtered ports: {len(self.ports) - len(self.results)}")
+        return self.results
