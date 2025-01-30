@@ -125,6 +125,3 @@ def main():
         except Exception as e:    
             logging.error(f"An error occurred during technology scan: {e}")
 
-
-if __name__ == "__main__":
-    main()
