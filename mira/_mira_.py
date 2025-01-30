@@ -3,24 +3,55 @@ import re
 import logging
 
 from modules.WebsiteAnalyzer import WebsiteAnalyzer
-from modules.utils import strip_protocol
 from modules.DomainInfo import DomainInfo
 from modules.WebScanner import WebScanner
 from modules.PortScanner import PortScanner
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 
+class CustomArgumentParser(argparse.ArgumentParser):
+    def print_help(self):
+        help_message = """/////////////////////////////////////////////////////////////////////////////////////////
+//             .         .                                                             //
+//            ,8.       ,8.           8 8888   8 888888888o.            .8.            //
+//           ,888.     ,888.          8 8888   8 8888    `88.          .888.           //
+//          .`8888.   .`8888.         8 8888   8 8888     `88         :88888.          //
+//         ,8.`8888. ,8.`8888.        8 8888   8 8888     ,88        . `88888.         //
+//        ,8'8.`8888,8^8.`8888.       8 8888   8 8888.   ,88'       .8. `88888.        //
+//       ,8' `8.`8888' `8.`8888.      8 8888   8 888888888P'       .8`8. `88888.       //
+//      ,8'   `8.`88'   `8.`8888.     8 8888   8 8888`8b          .8' `8. `88888.      //
+//     ,8'     `8.`'     `8.`8888.    8 8888   8 8888 `8b.       .8'   `8. `88888.     //
+//    ,8'       `8        `8.`8888.   8 8888   8 8888   `8b.    .888888888. `88888.    //
+//   ,8'         `         `8.`8888.  8 8888   8 8888     `88. .8'       `8. `88888.   //
+//                                                                                     //
+/////////////////////////////////////////////////////////////////////////////////////////
+-----------------------------------------------------------------------------------------
+Welcome to Mira!
+        
+This reconnaissance tool helps with the initial phase of information gathering.
+
+It can perform DNS lookups, port scans, directory scans, subdomain scans, and technology scans.
+
+Please use the following options to perform the desired scan.
+=========================================================================================
+Note: The target URL and one other option must be provided for all scans.
+
+Options:
+"""
+        print(help_message)
+        super().print_help()
 
 def main():
-    parser = argparse.ArgumentParser(description="Mira, a reconnaissance tool")
-    parser.add_argument('-bi', '--basic-info', action='store_true', help="Basic Target Information")
-    parser.add_argument('-ps', '--port-scan', action='store_true', help="Port Scan")
-    parser.add_argument('-ds', '--dir-scan', action='store_true', help="Directory Scan")
-    parser.add_argument('-ss', '--sub-scan', action='store_true', help="Subdomain Scan")
-    parser.add_argument('-ts', '--tech-scan', action='store_true', help="Technology Scan")
+    parser = CustomArgumentParser()
+    
+    parser.add_argument('-Si', '--site-info', action='store_true', help="Target Site Information")
+    parser.add_argument('-Ps', '--port-scan', action='store_true', help="Port Scan")
+    parser.add_argument('-Ds', '--dir-scan', action='store_true', help="Directory Scan")
+    parser.add_argument('-Ss', '--sub-scan', action='store_true', help="Subdomain Scan")
+    parser.add_argument('-Ts', '--tech-scan', action='store_true', help="Technology Scan")
     parser.add_argument('-t', '--target', type=str, help="Target URL", required=True)
     parser.add_argument('-p', '--ports', type=str, help="Ports to scan (e.g., 1-1024 or 22,80,443)")
-    parser.add_argument('-wl', '--wordlist', type=str, help="Path to the wordlist", default="subdomains.txt")
+    parser.add_argument('-Wl', '--wordlist', type=str, help="Path to the wordlist", default="subdomains.txt")
     
     args = parser.parse_args()
 
@@ -39,7 +70,7 @@ def main():
         logging.error("Please enter a target URL.")
         return
         
-    if args.basic_info:
+    if args.site_info:
         try:
             analyse = DomainInfo.dns_look_up(target)
             if analyse:
