@@ -8,11 +8,13 @@ import builtwith
 import re
 import requests
 import nmap
+import logging
 from threading import Thread, Lock
 from queue import Queue
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def strip_protocol(url):
     return url.replace('http://', '').replace('https://', '')
@@ -29,7 +31,7 @@ class DomainInfo:
             ip_address = socket.gethostbyname(domain)
             self.whois_data.append(f"IP Address: {ip_address}\n")
         except Exception as e:
-            self.whois_data.append(f"IP Address: Not found\nAn error occurred during IP lookup: {e}\n")
+            logging.error(f"IP Address: Not found\nAn error occurred during IP lookup: {e}\n")
 
 
     def whois_lookup(self):
@@ -48,7 +50,7 @@ class DomainInfo:
             }
             self.whois_data.append(whois_info)
         except Exception as e:
-            self.whois_data.append(f"An error occurred during WHOIS lookup: {e}")
+            logging.error(f"An error occurred during WHOIS lookup: {e}")
 
     def format_output(self):
         try:
@@ -61,7 +63,7 @@ class DomainInfo:
                     formatted_data.append(item.strip())
             return "\n".join(formatted_data)
         except Exception as e:
-            return f"An error occurred when formatting the domain output: {e}"
+            logging.error(f"An error occurred when formatting the domain output: {e}")
 
     def get_domain_info(self):
         try:
@@ -69,13 +71,14 @@ class DomainInfo:
             self.whois_lookup()
             return self.format_output()
         except Exception as e:
-            return f"An error occurred when retrieving domain information: {e}"
+            logging.error(f"An error occurred when retrieving domain information: {e}")
 
+    @staticmethod
     def dns_look_up(target):
         try:
             return DomainInfo(target)
         except Exception as e:
-            print(f"An error occurred during DNS lookup: {e}")
+            logging.error(f"An error occurred during DNS lookup: {e}")
 
 
 class WebScanner:
@@ -88,13 +91,13 @@ class WebScanner:
         self.results = []
         
     def scan_directories(self): 
-        print(f"Performing directory scan on {self.target}...\n")
+        logging.info(f"Performing directory scan on {self.target}...\n")
 
         try:
             response = requests.get(self.target, timeout=5)
             response.raise_for_status()  
         except requests.exceptions.RequestException as e:
-            print(f"[!] Error accessing {self.target}: {e}")
+            logging.error(f"[!] Error accessing {self.target}: {e}")
             return self.results
         
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -110,16 +113,14 @@ class WebScanner:
                     if parsed_url.path.endswith('/'):
                         directories.add(full_url)
         except Exception as e:
-            print(f"An error occurred: {e}")
+            logging.error(f"An error occurred: {e}")
 
-        for dir in directories:
-            self.results.append(dir)
-
+        self.results.extend(directories)
         return self.results
     
     def scan_subdomains(self):
         self.results.clear()
-        print(f"Performing subdomain scan on {self.Target}...")
+        logging.info(f"Performing subdomain scan on {self.Target}...")
         
         q = Queue()
         self.results = []
@@ -160,13 +161,13 @@ class PortScanner:
         self.result = []  
 
     def basic_scan(self):
-        print(f"Performing basic port scan on {self.target} for common ports...")
+        logging.info(f"Performing basic port scan on {self.target} for common ports...")
         try:
             nm = nmap.PortScanner()
             nm.scan(self.target, arguments=f'-p {self.ports}')
             self.scan_results(nm)
         except Exception as e:
-            print(f"An error occurred: {e}")
+            logging.error(f"An error occurred: {e}")
         return self.result
 
     def scan_results(self, nm):
@@ -179,7 +180,7 @@ class PortScanner:
                     for port in nm[host][proto].keys():
                         self.result.append(f'Port: {port}, State: {nm[host][proto][port]["state"]}')
         except Exception as e:
-            print(f"An error occurred: {e}")
+            logging.error(f"An error occurred: {e}")
 
 
 class WebsiteAnalyzer:
@@ -191,7 +192,7 @@ class WebsiteAnalyzer:
             website = builtwith.parse(self.url)
             return website
         except Exception as e:        
-            print(f"An error occurred while parsing with BuiltWith: {e}")
+            logging.error(f"An error occurred while parsing with BuiltWith: {e}")
             return {}
 
     def get_whatweb_technologies(self):
@@ -200,16 +201,16 @@ class WebsiteAnalyzer:
             if result.returncode == 0:
                 return result.stdout
             else:
-                print(f"Error: {result.stderr}")
+                logging.error(f"Error: {result.stderr}")
                 return ""
         except subprocess.CalledProcessError as e:
-            print(f"CalledProcessError occurred: {e}")
+            logging.error(f"CalledProcessError occurred: {e}")
             return ""
         except FileNotFoundError as e:
-            print(f"FileNotFoundError occurred: {e}")
+            logging.error(f"FileNotFoundError occurred: {e}")
             return ""
         except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+            logging.error(f"An unexpected error occurred: {e}")
             return ""
 
     @staticmethod
@@ -223,19 +224,18 @@ class WebsiteAnalyzer:
         return formatted_output
 
     def analyze(self):
-        # Analyze website and print detected technologies
-        print("\nDetected Software:")
-        print("=================================")
+        logging.info("\nDetected Software:")
+        logging.info("=================================")
         builtwith_technologies = self.get_builtwith_technologies()
         if builtwith_technologies:
             for key, value in builtwith_technologies.items():
-                print(key + ":", ", ".join(value))
+                logging.info(key + ":", ", ".join(value))
 
-        print("---------------------------------")
+        logging.info("---------------------------------")
         technologies = self.get_whatweb_technologies()
         if technologies:
             formatted_technologies = self.format_output(technologies)
-            print(formatted_technologies)
+            logging.info(formatted_technologies)
 
 
 def main():
@@ -260,10 +260,10 @@ def main():
             if not target.startswith("http"):
                 target = "http://" + target
         else:
-            print("Invalid URL. Please enter a valid URL.")
+            logging.error("Invalid URL. Please enter a valid URL.")
             return
     else:
-        print("Please enter a target URL.")
+        logging.error("Please enter a target URL.")
         return
         
     if args.basic_info:
@@ -271,53 +271,53 @@ def main():
             analyse = DomainInfo.dns_look_up(target)
             if analyse:
                 info = analyse.get_domain_info()
-                print(info)
+                logging.info(info)
             else:
-                print("Failed to perform DNS lookup.")
+                logging.error("Failed to perform DNS lookup.")
         except Exception as e:      
-            print(f"An error occurred during basic scan: {e}")
+            logging.error(f"An error occurred during basic scan: {e}")
 
     elif args.port_scan:
         try:
             scan = PortScanner(target, args.ports)
             results = scan.basic_scan()
             for result in results:
-                print(result)
+                logging.info(result)
         except Exception as e:
-            print(f"An error occurred during port scan: {e}")
+            logging.error(f"An error occurred during port scan: {e}")
 
     elif args.dir_scan:
         try:
             scanner = WebScanner(target, args.wordlist)
             directories = scanner.scan_directories()
             if directories:
-                print("Directories found:")
+                logging.info("Directories found:")
                 for directory in directories:
-                    print(directory)
+                    logging.info(directory)
             else:
-                print("No directories found.")
+                logging.info("No directories found.")
         except Exception as e:
-            print(f"An error occurred during directory scan: {e}")
+            logging.error(f"An error occurred during directory scan: {e}")
     
     elif args.sub_scan:
         try:
             scanner = WebScanner(target, args.wordlist)    
             subdomains = scanner.scan_subdomains()
             if subdomains:
-                print("Subdomains found:")
+                logging.info("Subdomains found:")
                 for subdomain in subdomains:
-                    print(subdomain)
+                    logging.info(subdomain)
             else:
-                print("No subdomains found.")
+                logging.info("No subdomains found.")
         except Exception as e:
-            print(f"An error occurred during subdomain scan: {e}")
+            logging.error(f"An error occurred during subdomain scan: {e}")
 
     elif args.tech_scan:
         try:
             analyzer = WebsiteAnalyzer(target)
             results = analyzer.analyze()
         except Exception as e:    
-            print(f"An error occurred during technology scan: {e}")
+            logging.error(f"An error occurred during technology scan: {e}")
 
 
 if __name__ == "__main__":
