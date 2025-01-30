@@ -2,10 +2,10 @@ import argparse
 import re
 import logging
 
-from modules.WebsiteAnalyzer import WebsiteAnalyzer
-from modules.DomainInfo import DomainInfo
-from modules.WebScanner import WebScanner
-from modules.PortScanner import PortScanner
+from .modules.WebsiteAnalyzer import WebsiteAnalyzer
+from .modules.DomainInfo import DomainInfo
+from .modules.WebScanner import WebScanner
+from .modules.PortScanner import PortScanner
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 
