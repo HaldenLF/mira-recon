@@ -17,18 +17,18 @@ v0.3.7
 > ### A steps for installing on all OS
 > ```
 > pip install mira_recon
-> '''
-> '''
+> ```
+> ```
 > python (or python3)
 > 
 > >>> import mira_recon
 > >>> quit()
-> '''
+> ```
 > 
-> '''
+> ```
 > mira_recon -h
 > ```
-> If you run into errors like ''' command not found''' double check the path
+> If you run into errors like `command not found` double check the path
 
 ## Contribute
 If you're interested in contributing to the project, please do! <br />
