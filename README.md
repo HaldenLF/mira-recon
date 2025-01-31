@@ -3,25 +3,32 @@
 ![Image of help menu for tool](https://github.com/HaldenLF/mira-recon/blob/main/mira_recon.png)
 
 ## Version
-v1.0.0
+v0.3.7
 
 ## Installation
 > requires python3 and pip
 
-> Linux and macOS path configuration
+> ### Linux and macOS path configuration
 > ```
 > echo 'export PATH="~/.local/bin:$PATH"' >> ~/.bashrc
 > source ~/.bashrc
 > ```
 
-> All OS follow these steps
+> ### A steps for installing on all OS
 > ```
 > pip install mira_recon
+> '''
+> '''
 > python (or python3)
-> import mira_recon
-> quit()
-> mira_recon -h (You should get an output like in the image above)
+> 
+> >>> import mira_recon
+> >>> quit()
+> '''
+> 
+> '''
+> mira_recon -h
 > ```
+> If you run into errors like ''' command not found''' double check the path
 
 ## Contribute
 If you're interested in contributing to the project, please do! <br />
