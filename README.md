@@ -22,7 +22,7 @@ Mira is a recon tool written in python. Its goal is to eliminate some of the ted
 * generate report with findings
 
 ## Version
-v0.3.7
+v0.3.8
 
 ## Installation
 > requires python3 and pip
