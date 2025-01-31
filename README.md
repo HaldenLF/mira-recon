@@ -1,6 +1,6 @@
 # Mira
 
-![Image of help menu for tool]()
+![Image of help menu for tool](https://github.com/HaldenLF/mira-recon/blob/main/mira_recon.png)
 
 ## Version
 v1.0.0
