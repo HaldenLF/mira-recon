@@ -5,7 +5,7 @@
 
 
 ## About
-Mira is a recon tool written in python. Its goal is to eliminate some of the tedious tasks in information gathering. Its great when used as a starting point.
+Mira is a recon tool written in Python. Its goal is to eliminate some of the tedious tasks in information gathering.
 
 ## Main Features
 * DNS scan
@@ -24,6 +24,11 @@ Mira is a recon tool written in python. Its goal is to eliminate some of the ted
 ## Version
 v0.3.8
 
+## Usage
+> mira_recon [arg] <site-name> [arg]
+e.g.
+> mira_recon -t example.com -Di
+
 ## Installation
 > requires python3 and pip
 
@@ -33,7 +38,7 @@ v0.3.8
 > source ~/.bashrc
 > ```
 
-> ### Steps for installing on all OS
+> ### Steps for installing
 > ```
 > pip install mira_recon
 > ```
@@ -47,7 +52,7 @@ v0.3.8
 > ```
 > mira_recon -h
 > ```
-> If you run into errors like `command not found` double check the path
+> If you run into errors like `command not found` double-check the path
 
 
 ## Contribute
