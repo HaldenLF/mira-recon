@@ -25,7 +25,8 @@ Mira is a recon tool written in Python. Its goal is to eliminate some of the ted
 v0.3.8
 
 ## Usage
-> mira_recon [arg] <site-name> [arg]
+> mira_recon [arg] site-name [arg]
+
 e.g.
 > mira_recon -t example.com -Di
 
