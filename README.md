@@ -1,7 +1,6 @@
 # Mira
 
-![Image of help menu for tool](https://github.com/HaldenLF/mira-recon/blob/main/mira_recon.png)
-
+![Image](https://github.com/user-attachments/assets/0829b561-a15c-4dfe-bd74-5f0b10d47c90)
 
 
 ## About
