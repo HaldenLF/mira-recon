@@ -30,9 +30,9 @@ e.g.
 > mira_recon -t example.com -Di
 
 ## Installation
-> requires python3 and pip
+> requires python3
 
-> ### Linux and macOS path configuration
+> ### Linux path configuration
 > ```
 > echo 'export PATH="~/.local/bin:$PATH"' >> ~/.bashrc
 > source ~/.bashrc
